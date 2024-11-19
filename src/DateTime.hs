@@ -46,20 +46,43 @@ pDay = (\a b -> Day (a*10 + b) ) <$> pDig <*> pDig
 
 --Time parse section
 pTime :: Parser Char Time
-pTime = undefined
+pTime = Time <$> pHour <*> pMinute <*> pSecond
+
+pHour :: Parser Char Hour
+pHour = (\a b -> Hour (a*10 + b)) <$> pDig <*> pDig
+
+pMinute :: Parser Char Minute
+pMinute = (\a b -> Minute (a*10 + b)) <$> pDig <*> pDig
+
+pSecond :: Parser Char Second 
+pSecond = (\a b -> Second (a*10 + b)) <$> pDig <*> pDig
 
 
+-- denk niet dat dit klopt maar dit is het idee, true als er een 'Z' achter staat, anders false
 pUTC :: Parser Char Bool
-pUTC = undefined --(\x -> False) <$> <|> (\x -> True) <$> symbol 'Z'
+pUTC = (\x -> 'Z') <$> True <|> False
+--(\x -> False) <$> <|> (\x -> True) <$> symbol 'Z'
 
 pDig :: Parser Char Int
 pDig =  digitToInt <$> satisfy isDig
 
 isDig :: Char -> Bool
-isDig = undefined
+isDig n = n `elem` ['0'..'9']
 
 digitToInt :: Char -> Int
-digitToInt = undefined
+digitToInt n 
+    | c == '0' = 0
+    | c == '1' = 1
+    | c == '2' = 2
+    | c == '3' = 3
+    | c == '4' = 4
+    | c == '5' = 5
+    | c == '6' = 6
+    | c == '7' = 7
+    | c == '8' = 8
+    | c == '9' = 9
+
+
 
 -- Exercise 2
 run :: Parser a b -> [a] -> Maybe b
