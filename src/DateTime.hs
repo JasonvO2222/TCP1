@@ -60,11 +60,12 @@ pMinute = (\a b -> Minute (a*10 + b)) <$> pDig <*> pDig
 pSecond :: Parser Char Second 
 pSecond = (\a b -> Second (a*10 + b)) <$> pDig <*> pDig
 
-
--- denk niet dat dit klopt maar dit is het idee, true als er een 'Z' achter staat, anders false
 pUTC :: Parser Char Bool
-pUTC = satisfy <*> symbol 'Z'
---(\x -> False) <$> <|> (\x -> True) <$> symbol 'Z'
+pUTC = const True <$> satisfy isUTC <<|> const False <$> satisfy (const True)
+
+isUTC :: Char -> Bool
+isUTC c | c == 'Z' = True
+        | otherwise = False
 
 pDig :: Parser Char Int
 pDig =  digitToInt <$> satisfy isDig
