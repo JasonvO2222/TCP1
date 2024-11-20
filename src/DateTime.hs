@@ -46,7 +46,10 @@ pDay = (\a b -> Day (a*10 + b) ) <$> pDig <*> pDig
 
 --Time parse section
 pTime :: Parser Char Time
-pTime = Time <$> pHour <*> pMinute <*> pSecond
+pTime = (\a b c d -> Time b c d) <$> pT <*> pHour <*> pMinute <*> pSecond
+
+pT :: Parser Char Char
+pT = symbol 'T'
 
 pHour :: Parser Char Hour
 pHour = (\a b -> Hour (a*10 + b)) <$> pDig <*> pDig
@@ -60,7 +63,7 @@ pSecond = (\a b -> Second (a*10 + b)) <$> pDig <*> pDig
 
 -- denk niet dat dit klopt maar dit is het idee, true als er een 'Z' achter staat, anders false
 pUTC :: Parser Char Bool
-pUTC = (\x -> 'Z') <$> True <|> False
+pUTC = satisfy <*> symbol 'Z'
 --(\x -> False) <$> <|> (\x -> True) <$> symbol 'Z'
 
 pDig :: Parser Char Int
@@ -70,7 +73,7 @@ isDig :: Char -> Bool
 isDig n = n `elem` ['0'..'9']
 
 digitToInt :: Char -> Int
-digitToInt n 
+digitToInt c 
     | c == '0' = 0
     | c == '1' = 1
     | c == '2' = 2
@@ -86,11 +89,11 @@ digitToInt n
 
 -- Exercise 2
 run :: Parser a b -> [a] -> Maybe b
-run parser xs = do
-    let r = parse parser xs
+run parser input = do
+    let r = parse parser input
     if null r
     then Nothing
-    else Just $ (fst . head) r
+    else Just $ (fst . head) r -- [(r, [s])] -> r
 
 -- Exercise 3
 printDateTime :: DateTime -> String
