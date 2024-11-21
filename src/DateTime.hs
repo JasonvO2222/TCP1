@@ -57,7 +57,7 @@ pHour = (\a b -> Hour (a*10 + b)) <$> pDig <*> pDig
 pMinute :: Parser Char Minute
 pMinute = (\a b -> Minute (a*10 + b)) <$> pDig <*> pDig
 
-pSecond :: Parser Char Second 
+pSecond :: Parser Char Second
 pSecond = (\a b -> Second (a*10 + b)) <$> pDig <*> pDig
 
 pUTC :: Parser Char Bool
@@ -74,7 +74,7 @@ isDig :: Char -> Bool
 isDig n = n `elem` ['0'..'9']
 
 digitToInt :: Char -> Int
-digitToInt c 
+digitToInt c
     | c == '0' = 0
     | c == '1' = 1
     | c == '2' = 2
@@ -87,7 +87,6 @@ digitToInt c
     | c == '9' = 9
 
 
-
 -- Exercise 2
 run :: Parser a b -> [a] -> Maybe b
 run parser input = do
@@ -98,11 +97,56 @@ run parser input = do
 
 -- Exercise 3
 printDateTime :: DateTime -> String
-printDateTime = undefined
+printDateTime (DateTime d t u) = printDate d ++ "T" ++ printTime t ++ printUTC u
+
+printUTC :: Bool -> String
+printUTC False = []
+printUTC True = "Z"
+
+printDate :: Date -> String
+printDate (Date y m d) = foldl (\a i-> a ++ show i) "" [runYear y, runMonth m, runDay d]
+
+printTime :: Time -> String
+printTime (Time h m s) = foldl (\a i -> a ++ show i) "" [runHour h, runMinute m, runSecond s]
 
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
-checkDateTime = undefined
+checkDateTime (DateTime d t u) = True
+
+--check Date section
+checkDate :: Date -> Bool
+checkDate (Date y m d) = checkYear y && checkMonth m && checkDay y m d
+
+checkYear :: Year -> Bool
+checkYear y = let i = runYear y in (i >= 1000)
+
+checkMonth :: Month -> Bool
+checkMonth m = let i = runMonth m in (i >= 1 && i <= 12)
+
+checkDay :: Year -> Month -> Day -> Bool
+checkDay y m d = id >= 1 && id <= (helpDay leap im e)
+    where leap = runYear y `mod` 4 == 0
+          im = runMonth m
+          e = even im
+          id = runDay d
+
+helpDay :: Bool -> Int -> Bool -> Int
+helpDay True 2 _  = 29
+helpDay _ 2 _     = 28
+helpDay _ _ True  = 30
+helpDay _ _ False = 31
+
+--check Time section
+checkTime :: Time -> Bool
+checkTime (Time h m s) = checkHour h && checkMS (runMinute m) && checkMS (runSecond s)
+
+checkHour :: Hour -> Bool
+checkHour h = let i = runHour h in (i >= 0 && i <= 23)
+
+checkMS :: Int -> Bool
+checkMS i = i >= 0 && i <= 59
+
+
