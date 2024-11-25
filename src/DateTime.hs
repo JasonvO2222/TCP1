@@ -8,6 +8,9 @@ data DateTime = DateTime { date :: Date
                          , utc  :: Bool }
     deriving (Eq, Ord)
 
+instance Show DateTime where
+    show = printDateTime
+
 data Date = Date { year  :: Year
                  , month :: Month
                  , day   :: Day }
@@ -104,10 +107,20 @@ printUTC False = []
 printUTC True = "Z"
 
 printDate :: Date -> String
-printDate (Date y m d) = foldl (\a i-> a ++ show i) "" [runYear y, runMonth m, runDay d]
+printDate (Date y m d) = showYear (runYear y) ++ foldl (\a i-> a ++ showInt i) "" [runMonth m, runDay d]
 
 printTime :: Time -> String
-printTime (Time h m s) = foldl (\a i -> a ++ show i) "" [runHour h, runMinute m, runSecond s]
+printTime (Time h m s) = foldl (\a i -> a ++ showInt i) "" [runHour h, runMinute m, runSecond s]
+
+showYear :: Int -> String
+showYear y | y < 10    = "000" ++ show y
+           | y < 100   = "00"  ++ show y
+           | y < 1000  = "0"   ++ show y
+           | otherwise =          show y
+
+showInt :: Int -> String
+showInt i | i < 10    = "0" ++ show i
+          | otherwise =        show i
 
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
