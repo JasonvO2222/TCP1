@@ -16,7 +16,7 @@ newtype Prodid = Prodid String deriving (Eq, Ord, Show)
 newtype Version = Version Float deriving (Eq, Ord, Show)
 
 
-data Event = Events { eventprops :: [Eventprop] }
+newtype Event = Events { eventprops :: [Eventprop] }
     deriving (Eq, Ord, Show)
 
 data Eventprop
@@ -29,9 +29,9 @@ data Eventprop
     | EP_Location Location
     deriving (Eq, Ord, Show)
 
-newtype DTstamp     = DTstamp DateTime  deriving (Eq, Ord)
-newtype DTstart     = DTstart DateTime  deriving (Eq, Ord)
-newtype DTend       = DTend DateTime  deriving (Eq, Ord)
+newtype DTstamp     = DTstamp DateTime  deriving (Eq, Ord, Show)
+newtype DTstart     = DTstart DateTime  deriving (Eq, Ord, Show)
+newtype DTend       = DTend DateTime  deriving (Eq, Ord, Show)
 newtype UID         = UID String    deriving (Eq, Ord, Show)
 newtype Description = Description String    deriving (Eq, Ord, Show)
 newtype Summary     = Summary String deriving (Eq, Ord, Show)
