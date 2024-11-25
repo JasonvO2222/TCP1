@@ -16,7 +16,7 @@ newtype Prodid = Prodid String deriving (Eq, Ord, Show)
 newtype Version = Version Float deriving (Eq, Ord, Show)
 
 
-newtype Event = Events { eventprops :: [Eventprop] }
+newtype Event = Event { eventprops :: [Eventprop] }
     deriving (Eq, Ord, Show)
 
 data Eventprop
@@ -61,4 +61,27 @@ recognizeCalendar s = run lexCalendar s >>= run parseCalendar
 
 -- Exercise 8
 printCalendar :: Calendar -> String
-printCalendar = undefined
+printCalendar (Calendar c e) = "BEGIN:VCALENDAR\n" ++ 
+                               foldl (\a p -> a ++ printCalProp p) "" c ++ 
+                               foldl (\a e -> a ++ printEvent e) "" e ++ 
+                               "END:VCALENDAR\n"
+
+printCalProp :: Calprop -> String
+printCalProp p = case p of
+    CP_Prodid p -> "PRODID:" ++ show p ++ "\n"
+    CP_Version v -> "VERSION:" ++ show v ++ "\n"
+
+printEvent :: Event -> String
+printEvent (Event e) = "BEGIN:VEVENT\n" ++ 
+                       foldl (\a p -> a ++ printEventProp p) "" e ++ 
+                       "END:VEVENT\n"
+
+printEventProp :: Eventprop -> String
+printEventProp p = case p of
+    EP_DTstamp dt -> "DTSTART:" ++ show dt ++ "\n"
+    EP_DTstart dt -> "DTSTART:" ++ show dt ++ "\n"
+    EP_DTend dt -> "DTEND:" ++ show dt ++ "\n"
+    EP_UID str -> "UID:" ++ show str ++ "\n"
+    EP_Description str -> "DESCRIPTION:" ++ show str ++ "\n"
+    EP_Summary str -> "SUMMARY:" ++ show str ++ "\n"
+    EP_Location str -> "LOCATION:" ++ show str ++ "\n"

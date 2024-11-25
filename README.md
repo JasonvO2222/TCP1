@@ -6,10 +6,10 @@ This directory contains an un-finished parser for a subset of the [iCalendar fil
 
 ## Tasks
 
-1. (0 pt)
+1. (0 pt) COMPLETED
     Read through the implementation of the parser, and the grammar of the [iCal datetime language](ical-datetime-spec.md)
 
-2. (6 pt)
+2. (6 pt) COMPLETED
     Implement the function
 
     ```haskell
@@ -21,7 +21,7 @@ This directory contains an un-finished parser for a subset of the [iCalendar fil
     Hint: you may find this task easier if you first define parsers for `Date`,
     `Time`, `Hour`, etc.
 
-3. (2pt)
+3. (2pt) COMPLETED
     Implement the function
 
     ```haskell
@@ -35,7 +35,7 @@ This directory contains an un-finished parser for a subset of the [iCalendar fil
 
     `run` should return `Nothing` iff no such result exists.
 
-4. (2 pt)
+4. (2 pt) COMPLETED
     Implement the function
 
     ```haskell
@@ -44,7 +44,7 @@ This directory contains an un-finished parser for a subset of the [iCalendar fil
 
     that turns a date and time value back into an iCal datetime string.
 
-5. (0 pt)
+5. (0 pt) COMPLETED
     Test your code.
 
     Your implementations of `parseDateTime` and `printDateTime` shoudld be *inverses* of each other,
@@ -78,7 +78,7 @@ This directory contains an un-finished parser for a subset of the [iCalendar fil
     hours can only range from 0 to 23, but the grammar generates all
     2-digit natural numbers.
 
-6. (3 pt)
+6. (3 pt) COMPLETED
     Implement the function
 
     ```haskell
@@ -117,7 +117,7 @@ This directory contains an un-finished parser for a subset of the [iCalendar fil
 
     Tip: You are allowed to use time libraries
 
-7. (8 pt)
+7. (8 pt) COMPLETED
     Define Haskell datatypes (or type synonyms) to describe the abstract syntax
     of an [iCal calendar](ical-calendar-spec.md)
     
@@ -138,7 +138,7 @@ This directory contains an un-finished parser for a subset of the [iCalendar fil
 
     which lex and parse the calendars, respectively.
 
-9. (3 pt)
+9. (3 pt) COMPLETED
     Implement the function
 
     ```haskell
