@@ -141,10 +141,49 @@ parseCalendar :: Parser Token Calendar
 parseCalendar = (\a b c d -> Calendar b c) <$> symbol BegCalendar <*> greedy pPropCal <*> greedy pEventToken <*> symbol EndCalendar
 
 pPropCal :: Parser Token Calprop
-pPropCal = undefined
+pPropCal = pVersionTok <|> pProdidTok
+    where
+        pVersionTok :: Parser Token Calprop
+        pVersionTok = (\(TokVer v) -> CP_Version (Version v)) <$> symbol (TokVer 0.0)
+
+        pProdidTok :: Parser Token Calprop 
+        pProdidTok = (\(TokPro s) -> CP_Prodid (Prodid s)) <$> symbol (TokPro "")  
+
 
 pEventToken :: Parser Token Event
-pEventToken = undefined
+pEventToken = (\_ props _ -> Event props) 
+    <$> symbol BegEvent 
+    <*> greedy pEventPropTok
+    <*> symbol EndEvent
+
+
+
+
+pEventPropTok :: Parser Token Eventprop
+pEventPropTok = pDTstampTok <|> pDTstartTok <|> pDTendTok <|> pUIDTok <|> pDescTok <|> pSumTok <|> pLocTok
+
+pDTstampTok :: Parser Token Eventprop
+pDTstampTok = (\(TokStamp a) -> EP_DTstamp (DTstamp a)) <$> symbol (TokStamp undefined)
+
+pDTstartTok :: Parser Token Eventprop
+pDTstartTok = (\(TokStart a) -> EP_DTstart (DTstart a)) <$> symbol (TokStart undefined)
+
+pDTendTok :: Parser Token Eventprop
+pDTendTok = (\(TokEnd a) -> EP_DTend (DTend a)) <$> symbol (TokEnd undefined)
+
+pUIDTok :: Parser Token Eventprop
+pUIDTok = (\(TokUID a) -> EP_UID (UID a)) <$> symbol (TokUID "")
+
+pDescTok :: Parser Token Eventprop
+pDescTok = (\(TokDesc a) -> EP_Description (Description a)) <$> symbol (TokDesc "")
+
+pSumTok :: Parser Token Eventprop
+pSumTok = (\(TokSum a) -> EP_Summary (Summary a)) <$> symbol (TokSum "")
+
+pLocTok :: Parser Token Eventprop
+pLocTok = (\(TokLoc a) -> EP_Location (Location a)) <$> symbol (TokLoc "")
+
+
 
 recognizeCalendar :: String -> Maybe Calendar
 recognizeCalendar s = run lexCalendar s >>= run parseCalendar
