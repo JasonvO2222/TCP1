@@ -51,6 +51,8 @@ data Token
     | TokDesc String
     | TokSum String
     | TokLoc String
+    | TokVer Float
+    | TokPro String
     deriving (Eq, Ord, Show)
 
 
@@ -61,31 +63,35 @@ lexCalendar = many (lexComp <|> lexProp)
 
 lexComp :: Parser Char Token
 lexComp = 
-    ("BEGIN:VCALENDAR" >> return (BegCalendar))
+    (token "BEGIN:VCALENDAR" >> return (BegCalendar))
     <|> 
-    (token "END:VCALENDAR" >> return (EndCalendar))
+    (token "\nEND:VCALENDAR\n" >> return (EndCalendar))
     <|>
-    (token "BEGIN:VEVENT" >> return (BegEvent))
+    (token "\nBEGIN:VEVENT" >> return (BegEvent))
     <|>
-    (token "END:VEVENT" >> return (EndEvent))
+    (token "\nEND:VEVENT" >> return (EndEvent))
 
 lexProp :: Parser Char Token
 lexProp =
-    (token "DTSTAMP" >> return (TokStamp <$> parseDateTime))
+    (token "\nDTSTAMP:" >>  (TokStamp <$> parseDateTime))
     <|>
-    (token "DTSTART" >> return (TokStart <$> parseDateTime))
+    (token "\nDTSTART:" >>  (TokStart <$> parseDateTime))
     <|> 
-    (token "DTEND" >> return (TokEnd <$> parseDateTime))
+    (token "\nDTEND:" >>  (TokEnd <$> parseDateTime))
     <|> 
-    (token "UID" >> return (TokUID <$> token ))
+    (token "\nUID:" >>  (TokUID <$> greedy takeSymbol))
     <|>
-    (token "DESCRIPTION" >> return (TokDesc <$> token))
+    (token "\nDESCRIPTION:" >>  (TokDesc <$> greedy takeSymbol))
     <|>
-    (token "SUMMARY" >> return (TokSum <$> token))
+    (token "\nSUMMARY:" >>  (TokSum <$> greedy takeSymbol))
     <|>
-    (token "LOCATION" >> return (TokLoc <$> token))
-
-
+    (token "\nLOCATION:" >>  (TokLoc <$> greedy takeSymbol))
+    <|>
+    (token "\nVERSION:" >> (TokVer <$> pF))
+    <|>
+    (token "\nPRODID:" >> (TokPro <$> greedy takeSymbol))
+pF :: Parser Char Float
+pF = (\a b c -> fromIntegral a + fromIntegral c * 0.1) <$> pDig <*> symbol '.' <*> pDig
 
 
 -- parse calender
@@ -132,7 +138,13 @@ pLocation =  (\a b c -> EP_Location (Location b)) <$> token "LOCATION:" <*> gree
 
 -- parse using token
 parseCalendar :: Parser Token Calendar
-parseCalendar = undefined
+parseCalendar = (\a b c d -> Calendar b c) <$> symbol BegCalendar <*> greedy pPropCal <*> greedy pEventToken <*> symbol EndCalendar
+
+pPropCal :: Parser Token Calprop
+pPropCal = undefined
+
+pEventToken :: Parser Token Event
+pEventToken = undefined
 
 recognizeCalendar :: String -> Maybe Calendar
 recognizeCalendar s = run lexCalendar s >>= run parseCalendar
