@@ -14,10 +14,10 @@ findEvents :: DateTime -> Calendar -> [Event]
 findEvents dt c = [x | x <- (events c), getStartTime x <= dt && getEndTime x > dt]
 
 getStartTime :: Event -> DateTime
-getStartTime e = let (EP_DTstart dt : _) = eventprops e in dt
+getStartTime e = let (EP_DTstart (DTstart dt) : _) = eventprops e in dt
 
 getEndTime :: Event -> DateTime
-getEndTime e = let (EP_DTend dt : _) = eventprops e in dt
+getEndTime e = let (EP_DTend (DTend dt) : _) = eventprops e in dt
 
 -- Check if any events overlap
 checkOverlapping :: Calendar -> Bool
@@ -38,3 +38,7 @@ isOverlap e1 e2 = (e1start < e2end && e1end > e2start)
 -- huh?
 timeSpent :: String -> Calendar -> Int
 timeSpent = undefined
+
+-- voor elke event met een bepaalde summary, tel minuten op
+
+

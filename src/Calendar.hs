@@ -2,6 +2,7 @@ module Calendar where
 
 import ParseLib
 import DateTime
+import Control.Applicative ((<|>))
 
 
 -- Exercise 6
@@ -47,12 +48,47 @@ lexCalendar = undefined
 
 -- parse calender
 pCal :: Parser Char Calendar
-pCal = undefined
+pCal = (\a b c d -> Calendar b c) <$> token "BEGIN:VCALENDAR\n" <*>
+                                      greedy pCalProp <*> 
+                                      greedy pEvent <*> 
+                                      token "END:VCALENDAR\n"
+
+pCalProp :: Parser Char Calprop
+pCalProp = pVersion <|> pProdid
+
+pVersion :: Parser Char Calprop
+pVersion = (\a b c -> CP_Version b) <$> token "VERSION:" <*> pFloat <*> symbol '\n'
+
+pFloat :: Parser Char Version
+pFloat = (\a b c -> Version (fromIntegral a + fromIntegral c * 0.1)) <$> pDig <*> symbol '.' <*> pDig
+
+pProdid :: Parser Char Calprop
+pProdid = (\a b c -> CP_Prodid (Prodid b)) <$> token "PRODID:" <*> greedy takeSymbol <*> symbol '\n'
+
+takeSymbol :: Parser Char Char
+takeSymbol = (const ' ') <$> token "\n " <<|> satisfy (/= '\n')
 
 -- parse event
 pEvent :: Parser Char Event
-pEvent = undefined
+pEvent = (\a b c -> Event b) <$> token "BEGIN:VEVENT\n" <*>
+                                 greedy pEventProp <*> 
+                                 token "END:VEVENT\n"
 
+pEventProp :: Parser Char Eventprop
+pEventProp = pDTstamp <|> pDTstart <|> pDTend <|> 
+             pUID <|> pDescription <|> pSummary <|> pLocation
+
+pDTstamp :: Parser Char Eventprop
+pDTstamp =  (\a b c -> EP_DTstamp (DTstamp b)) <$> token "DTSTAMP:" <*> parseDateTime <*> symbol '\n'
+pDTstart =  (\a b c -> EP_DTstart (DTstart b)) <$> token "DTSTART:" <*> parseDateTime <*> symbol '\n'
+pDTend =  (\a b c -> EP_DTend (DTend b)) <$> token "DTEND:" <*> parseDateTime <*> symbol '\n'
+pUID =  (\a b c -> EP_UID (UID b)) <$> token "UID:" <*> greedy takeSymbol <*> symbol '\n'
+pDescription =  (\a b c -> EP_Description (Description b)) <$> token "DESCRIPTION:" <*> greedy takeSymbol <*> symbol '\n'
+pSummary =  (\a b c -> EP_Summary (Summary b)) <$> token "SUMMARY:" <*> greedy takeSymbol <*> symbol '\n'
+pLocation =  (\a b c -> EP_Location (Location b)) <$> token "LOCATION:" <*> greedy takeSymbol <*> symbol '\n'
+
+
+-- parse using token
 parseCalendar :: Parser Token Calendar
 parseCalendar = undefined
 
@@ -78,10 +114,10 @@ printEvent (Event e) = "BEGIN:VEVENT\n" ++
 
 printEventProp :: Eventprop -> String
 printEventProp p = case p of
-    EP_DTstamp dt -> "DTSTART:" ++ show dt ++ "\n"
-    EP_DTstart dt -> "DTSTART:" ++ show dt ++ "\n"
-    EP_DTend dt -> "DTEND:" ++ show dt ++ "\n"
-    EP_UID str -> "UID:" ++ show str ++ "\n"
-    EP_Description str -> "DESCRIPTION:" ++ show str ++ "\n"
-    EP_Summary str -> "SUMMARY:" ++ show str ++ "\n"
-    EP_Location str -> "LOCATION:" ++ show str ++ "\n"
+    EP_DTstamp (DTstamp dt) -> "DTSTART:" ++ show dt ++ "\n"
+    EP_DTstart (DTstart dt) -> "DTSTART:" ++ show dt ++ "\n"
+    EP_DTend (DTend dt) -> "DTEND:" ++ show dt ++ "\n"
+    EP_UID (UID str) -> "UID:" ++ str ++ "\n"
+    EP_Description (Description str) -> "DESCRIPTION:" ++  str ++ "\n"
+    EP_Summary (Summary str) -> "SUMMARY:" ++ str ++ "\n"
+    EP_Location (Location str) -> "LOCATION:" ++ str ++ "\n"

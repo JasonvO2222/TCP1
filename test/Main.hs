@@ -15,6 +15,8 @@ import Calendar
 import Features
 import System.Environment
 import System.IO
+import Text.Read (Lexeme(String))
+import Control.Exception (handle)
 
 
 data Result = SyntaxError | Invalid DateTime | Valid DateTime deriving (Eq, Ord)
@@ -28,7 +30,7 @@ main :: IO ()
 main = do
   setNewlineTranslations
   --mainDateTime
-  testDateTime
+  testCalendar
 
 mainDateTime :: IO ()
 mainDateTime = interact (printOutput . processCheck . processInput)
@@ -43,8 +45,18 @@ testDateTime = interact (show . res . test)
         res dt = case dt of
                    Just dt -> printDateTime dt
                    Nothing -> "Error: couldn't parse string"
-  
 
+testCalendar :: IO ()
+testCalendar = do
+        withFile "examples/rooster_infotc.ics" ReadMode $ \handle -> do
+          read <- hGetContents handle
+          putStr (getres (run pCal read))
+        
+        return ()
+
+        where getres c = case c of
+                    Just c -> printCalendar c
+                    Nothing -> "Error: couldn't parse string"
 
 mainCalendar :: IO ()
 mainCalendar = interact (show . recognizeCalendar)
