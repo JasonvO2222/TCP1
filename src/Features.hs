@@ -23,8 +23,8 @@ getEndTime e = let (EP_DTend (DTend dt) : _) = eventprops e in dt
 checkOverlapping :: Calendar -> Bool
 checkOverlapping c = any (uncurry isOverlap) pairs
     where
-        eventsList = events c
-        pairs = [(e1, e2) | e1 <- eventsList, e2 <- eventsList, e1 /= e2]
+        evs = events c
+        pairlist = [(x,y) | x <- evs, y <- evs, x != y]
 
 -- Check if two events overlap
 isOverlap :: Event -> Event -> Bool
@@ -37,7 +37,13 @@ isOverlap e1 e2 = (e1start < e2end && e1end > e2start)
 
 -- huh?
 timeSpent :: String -> Calendar -> Int
-timeSpent = undefined
+timeSpent = map (+) . map (calcTotTime) fltrd
+    where 
+        evs = events c
+        fltrd = filter (==string) (summary evs)
+
+calcTotTime :: Event -> Float
+calcTotTime e = (DTEND e) - (DTSTART e)
 
 -- voor elke event met een bepaalde summary, tel minuten op
 

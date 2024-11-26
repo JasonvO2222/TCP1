@@ -39,12 +39,54 @@ newtype Summary     = Summary String deriving (Eq, Ord, Show)
 newtype Location    = Location String deriving (Eq, Ord, Show)
 
 -- Exercise 7
-data Token = Token deriving (Eq, Ord, Show)
+data Token 
+    = BegCalendar 
+    | EndCalendar 
+    | BegEvent 
+    | EndEvent 
+    | TokStamp DateTime
+    | TokStart DateTime
+    | TokEnd DateTime
+    | TokUID String
+    | TokDesc String
+    | TokSum String
+    | TokLoc String
+    deriving (Eq, Ord, Show)
+
 
 
 -- ik denk eerst kijken of het een calender of n event is ofzo?
 lexCalendar :: Parser Char [Token]
-lexCalendar = undefined
+lexCalendar = many (lexComp <|> lexProp)
+
+lexComp :: Parser Char Token
+lexComp = 
+    ("BEGIN:VCALENDAR" >> return (BegCalendar))
+    <|> 
+    (token "END:VCALENDAR" >> return (EndCalendar))
+    <|>
+    (token "BEGIN:VEVENT" >> return (BegEvent))
+    <|>
+    (token "END:VEVENT" >> return (EndEvent))
+
+lexProp :: Parser Char Token
+lexProp =
+    (token "DTSTAMP" >> return (TokStamp <$> parseDateTime))
+    <|>
+    (token "DTSTART" >> return (TokStart <$> parseDateTime))
+    <|> 
+    (token "DTEND" >> return (TokEnd <$> parseDateTime))
+    <|> 
+    (token "UID" >> return (TokUID <$> token ))
+    <|>
+    (token "DESCRIPTION" >> return (TokDesc <$> token))
+    <|>
+    (token "SUMMARY" >> return (TokSum <$> token))
+    <|>
+    (token "LOCATION" >> return (TokLoc <$> token))
+
+
+
 
 -- parse calender
 pCal :: Parser Char Calendar
