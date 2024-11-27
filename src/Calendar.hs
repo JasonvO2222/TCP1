@@ -10,33 +10,21 @@ data Calendar = Calendar { calprops :: [Calprop],
                            events :: [Event]     }
     deriving (Eq, Ord, Show)
 
-data Calprop = CP_Prodid Prodid | CP_Version Version deriving (Eq, Ord, Show)
-
-newtype Prodid = Prodid String deriving (Eq, Ord, Show)
-
-newtype Version = Version Float deriving (Eq, Ord, Show)
-
+data Calprop = Prodid String 
+             | Version Float deriving (Eq, Ord, Show)
 
 newtype Event = Event { eventprops :: [Eventprop] }
     deriving (Eq, Ord, Show)
 
 data Eventprop
-    = EP_DTstamp DTstamp
-    | EP_DTstart DTstart
-    | EP_DTend DTend
-    | EP_UID UID
-    | EP_Description Description
-    | EP_Summary Summary
-    | EP_Location Location
+    = DTstamp DateTime 
+    | DTstart DateTime
+    | DTend DateTime
+    | UID String
+    | Description String
+    | Summary String
+    | Location String
     deriving (Eq, Ord, Show)
-
-newtype DTstamp     = DTstamp DateTime  deriving (Eq, Ord, Show)
-newtype DTstart     = DTstart DateTime  deriving (Eq, Ord, Show)
-newtype DTend       = DTend DateTime  deriving (Eq, Ord, Show)
-newtype UID         = UID String    deriving (Eq, Ord, Show)
-newtype Description = Description String    deriving (Eq, Ord, Show)
-newtype Summary     = Summary String deriving (Eq, Ord, Show)
-newtype Location    = Location String deriving (Eq, Ord, Show)
 
 -- Exercise 7
 data Token 
@@ -63,13 +51,13 @@ lexCalendar = many (lexComp <|> lexProp)
 
 lexComp :: Parser Char Token
 lexComp = 
-    (token "BEGIN:VCALENDAR" >> return (BegCalendar))
+    (token "BEGIN:VCALENDAR" >> return BegCalendar)
     <|> 
-    (token "\nEND:VCALENDAR\n" >> return (EndCalendar))
+    (token "\nEND:VCALENDAR\n" >> return EndCalendar)
     <|>
-    (token "\nBEGIN:VEVENT" >> return (BegEvent))
+    (token "\nBEGIN:VEVENT" >> return BegEvent)
     <|>
-    (token "\nEND:VEVENT" >> return (EndEvent))
+    (token "\nEND:VEVENT" >> return EndEvent)
 
 lexProp :: Parser Char Token
 lexProp =
@@ -105,13 +93,13 @@ pCalProp :: Parser Char Calprop
 pCalProp = pVersion <|> pProdid
 
 pVersion :: Parser Char Calprop
-pVersion = (\a b c -> CP_Version b) <$> token "VERSION:" <*> pFloat <*> symbol '\n'
+pVersion = (\a b c -> b) <$> token "VERSION:" <*> pFloat <*> symbol '\n'
 
-pFloat :: Parser Char Version
+pFloat :: Parser Char Calprop
 pFloat = (\a b c -> Version (fromIntegral a + fromIntegral c * 0.1)) <$> pDig <*> symbol '.' <*> pDig
 
 pProdid :: Parser Char Calprop
-pProdid = (\a b c -> CP_Prodid (Prodid b)) <$> token "PRODID:" <*> greedy takeSymbol <*> symbol '\n'
+pProdid = (\a b c -> Prodid b) <$> token "PRODID:" <*> greedy takeSymbol <*> symbol '\n'
 
 takeSymbol :: Parser Char Char
 takeSymbol = (const ' ') <$> token "\n " <<|> satisfy (/= '\n')
@@ -127,13 +115,13 @@ pEventProp = pDTstamp <|> pDTstart <|> pDTend <|>
              pUID <|> pDescription <|> pSummary <|> pLocation
 
 pDTstamp :: Parser Char Eventprop
-pDTstamp =  (\a b c -> EP_DTstamp (DTstamp b)) <$> token "DTSTAMP:" <*> parseDateTime <*> symbol '\n'
-pDTstart =  (\a b c -> EP_DTstart (DTstart b)) <$> token "DTSTART:" <*> parseDateTime <*> symbol '\n'
-pDTend =  (\a b c -> EP_DTend (DTend b)) <$> token "DTEND:" <*> parseDateTime <*> symbol '\n'
-pUID =  (\a b c -> EP_UID (UID b)) <$> token "UID:" <*> greedy takeSymbol <*> symbol '\n'
-pDescription =  (\a b c -> EP_Description (Description b)) <$> token "DESCRIPTION:" <*> greedy takeSymbol <*> symbol '\n'
-pSummary =  (\a b c -> EP_Summary (Summary b)) <$> token "SUMMARY:" <*> greedy takeSymbol <*> symbol '\n'
-pLocation =  (\a b c -> EP_Location (Location b)) <$> token "LOCATION:" <*> greedy takeSymbol <*> symbol '\n'
+pDTstamp =  (\a b c -> DTstamp b) <$> token "DTSTAMP:" <*> parseDateTime <*> symbol '\n'
+pDTstart =  (\a b c -> DTstart b) <$> token "DTSTART:" <*> parseDateTime <*> symbol '\n'
+pDTend =  (\a b c -> DTend b) <$> token "DTEND:" <*> parseDateTime <*> symbol '\n'
+pUID =  (\a b c -> UID b) <$> token "UID:" <*> greedy takeSymbol <*> symbol '\n'
+pDescription =  (\a b c -> Description b) <$> token "DESCRIPTION:" <*> greedy takeSymbol <*> symbol '\n'
+pSummary =  (\a b c -> Summary b) <$> token "SUMMARY:" <*> greedy takeSymbol <*> symbol '\n'
+pLocation =  (\a b c -> Location b) <$> token "LOCATION:" <*> greedy takeSymbol <*> symbol '\n'
 
 
 -- parse using token
@@ -144,10 +132,10 @@ pPropCal :: Parser Token Calprop
 pPropCal = pVersionTok <|> pProdidTok
     where
         pVersionTok :: Parser Token Calprop
-        pVersionTok = (\(TokVer v) -> CP_Version (Version v)) <$> symbol (TokVer 0.0)
+        pVersionTok = (\(TokVer v) -> Version v) <$> symbol (TokVer 0.0)
 
         pProdidTok :: Parser Token Calprop 
-        pProdidTok = (\(TokPro s) -> CP_Prodid (Prodid s)) <$> symbol (TokPro "")  
+        pProdidTok = (\(TokPro s) -> Prodid s) <$> symbol (TokPro "")  
 
 
 pEventToken :: Parser Token Event
@@ -163,25 +151,25 @@ pEventPropTok :: Parser Token Eventprop
 pEventPropTok = pDTstampTok <|> pDTstartTok <|> pDTendTok <|> pUIDTok <|> pDescTok <|> pSumTok <|> pLocTok
 
 pDTstampTok :: Parser Token Eventprop
-pDTstampTok = (\(TokStamp a) -> EP_DTstamp (DTstamp a)) <$> symbol (TokStamp undefined)
+pDTstampTok = (\(TokStamp a) -> DTstamp a) <$> symbol (TokStamp undefined)
 
 pDTstartTok :: Parser Token Eventprop
-pDTstartTok = (\(TokStart a) -> EP_DTstart (DTstart a)) <$> symbol (TokStart undefined)
+pDTstartTok = (\(TokStart a) -> DTstart a) <$> symbol (TokStart undefined)
 
 pDTendTok :: Parser Token Eventprop
-pDTendTok = (\(TokEnd a) -> EP_DTend (DTend a)) <$> symbol (TokEnd undefined)
+pDTendTok = (\(TokEnd a) -> DTend a) <$> symbol (TokEnd undefined)
 
 pUIDTok :: Parser Token Eventprop
-pUIDTok = (\(TokUID a) -> EP_UID (UID a)) <$> symbol (TokUID "")
+pUIDTok = (\(TokUID a) -> UID a) <$> symbol (TokUID "")
 
 pDescTok :: Parser Token Eventprop
-pDescTok = (\(TokDesc a) -> EP_Description (Description a)) <$> symbol (TokDesc "")
+pDescTok = (\(TokDesc a) -> Description a) <$> symbol (TokDesc "")
 
 pSumTok :: Parser Token Eventprop
-pSumTok = (\(TokSum a) -> EP_Summary (Summary a)) <$> symbol (TokSum "")
+pSumTok = (\(TokSum a) -> Summary a) <$> symbol (TokSum "")
 
 pLocTok :: Parser Token Eventprop
-pLocTok = (\(TokLoc a) -> EP_Location (Location a)) <$> symbol (TokLoc "")
+pLocTok = (\(TokLoc a) -> Location a) <$> symbol (TokLoc "")
 
 
 
@@ -197,8 +185,8 @@ printCalendar (Calendar c e) = "BEGIN:VCALENDAR\n" ++
 
 printCalProp :: Calprop -> String
 printCalProp p = case p of
-    CP_Prodid p -> "PRODID:" ++ show p ++ "\n"
-    CP_Version v -> "VERSION:" ++ show v ++ "\n"
+    Prodid p -> "PRODID:" ++ show p ++ "\n"
+    Version v -> "VERSION:" ++ show v ++ "\n"
 
 printEvent :: Event -> String
 printEvent (Event e) = "BEGIN:VEVENT\n" ++ 
@@ -207,10 +195,10 @@ printEvent (Event e) = "BEGIN:VEVENT\n" ++
 
 printEventProp :: Eventprop -> String
 printEventProp p = case p of
-    EP_DTstamp (DTstamp dt) -> "DTSTART:" ++ show dt ++ "\n"
-    EP_DTstart (DTstart dt) -> "DTSTART:" ++ show dt ++ "\n"
-    EP_DTend (DTend dt) -> "DTEND:" ++ show dt ++ "\n"
-    EP_UID (UID str) -> "UID:" ++ str ++ "\n"
-    EP_Description (Description str) -> "DESCRIPTION:" ++  str ++ "\n"
-    EP_Summary (Summary str) -> "SUMMARY:" ++ str ++ "\n"
-    EP_Location (Location str) -> "LOCATION:" ++ str ++ "\n"
+     DTstamp dt -> "DTSTART:" ++ show dt ++ "\n"
+     DTstart dt -> "DTSTART:" ++ show dt ++ "\n"
+     DTend dt -> "DTEND:" ++ show dt ++ "\n"
+     UID str -> "UID:" ++ str ++ "\n"
+     Description str -> "DESCRIPTION:" ++  str ++ "\n"
+     Summary str -> "SUMMARY:" ++ str ++ "\n"
+     Location str -> "LOCATION:" ++ str ++ "\n"

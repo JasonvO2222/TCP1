@@ -14,10 +14,10 @@ findEvents :: DateTime -> Calendar -> [Event]
 findEvents dt c = [x | x <- (events c), getStartTime x <= dt && getEndTime x > dt]
 
 getStartTime :: Event -> DateTime
-getStartTime e = let (EP_DTstart (DTstart dt) : _) = eventprops e in dt
+getStartTime e = let (DTstart dt : _) = eventprops e in dt
 
 getEndTime :: Event -> DateTime
-getEndTime e = let (EP_DTend (DTend dt) : _) = eventprops e in dt
+getEndTime e = let (DTend dt : _) = eventprops e in dt
 
 -- Check if any events overlap
 checkOverlapping :: Calendar -> Bool
