@@ -30,7 +30,8 @@ main :: IO ()
 main = do
   setNewlineTranslations
   --mainDateTime
-  testCalendar
+  --testCalendar
+  testTokenCalendar
 
 mainDateTime :: IO ()
 mainDateTime = interact (printOutput . processCheck . processInput)
@@ -57,6 +58,22 @@ testCalendar = do
         where getres c = case c of
                     Just c -> printCalendar c
                     Nothing -> "Error: couldn't parse string"
+
+testTokenCalendar :: IO ()
+testTokenCalendar = do
+        withFile "examples/rooster_infotc.ics" ReadMode $ \handle -> do
+          read <- hGetContents handle
+          let intermediate = getinter (run lexCalendar read)
+          putStr (getres (run parseCalendar intermediate))
+        
+        return ()
+
+        where getres c = case c of
+                    Just c -> printCalendar c
+                    Nothing -> "Error"
+              getinter ts = case ts of 
+                    Just ts -> ts
+                    Nothing -> []
 
 mainCalendar :: IO ()
 mainCalendar = interact (show . recognizeCalendar)

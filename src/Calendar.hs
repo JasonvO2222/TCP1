@@ -43,7 +43,36 @@ data Token
     | TokPro String
     deriving (Eq, Ord, Show)
 
+data TokenType
+    = T_BegCalendar 
+    | T_EndCalendar 
+    | T_BegEvent 
+    | T_EndEvent 
+    | T_TokStamp
+    | T_TokStart
+    | T_TokEnd
+    | T_TokUID
+    | T_TokDesc
+    | T_TokSum
+    | T_TokLoc
+    | T_TokVer
+    | T_TokPro
+    deriving (Eq, Ord, Show)
 
+detectTokenType :: Token -> TokenType
+detectTokenType BegCalendar  = T_BegCalendar
+detectTokenType EndCalendar  = T_EndCalendar
+detectTokenType BegEvent  = T_BegEvent
+detectTokenType EndEvent  = T_EndEvent
+detectTokenType (TokStamp _) = T_TokStamp
+detectTokenType (TokStart _) = T_TokStart
+detectTokenType (TokEnd _) = T_TokEnd
+detectTokenType (TokUID _) = T_TokUID
+detectTokenType (TokDesc _) = T_TokDesc
+detectTokenType (TokSum _) = T_TokSum
+detectTokenType (TokLoc _) = T_TokLoc
+detectTokenType (TokVer _) = T_TokVer
+detectTokenType (TokPro _) = T_TokPro
 
 -- ik denk eerst kijken of het een calender of n event is ofzo?
 lexCalendar :: Parser Char [Token]
@@ -132,11 +161,13 @@ pPropCal :: Parser Token Calprop
 pPropCal = pVersionTok <|> pProdidTok
     where
         pVersionTok :: Parser Token Calprop
-        pVersionTok = (\(TokVer v) -> Version v) <$> symbol (TokVer 0.0)
+        pVersionTok = (\(TokVer v) -> Version v) <$> satisfy (compareT T_TokVer)
 
         pProdidTok :: Parser Token Calprop 
-        pProdidTok = (\(TokPro s) -> Prodid s) <$> symbol (TokPro "")  
+        pProdidTok = (\(TokPro s) -> Prodid s) <$> satisfy (compareT T_TokPro)
 
+compareT :: TokenType -> Token -> Bool
+compareT tt t = tt == (detectTokenType t)
 
 pEventToken :: Parser Token Event
 pEventToken = (\_ props _ -> Event props) 
@@ -144,33 +175,29 @@ pEventToken = (\_ props _ -> Event props)
     <*> greedy pEventPropTok
     <*> symbol EndEvent
 
-
-
-
 pEventPropTok :: Parser Token Eventprop
 pEventPropTok = pDTstampTok <|> pDTstartTok <|> pDTendTok <|> pUIDTok <|> pDescTok <|> pSumTok <|> pLocTok
 
 pDTstampTok :: Parser Token Eventprop
-pDTstampTok = (\(TokStamp a) -> DTstamp a) <$> symbol (TokStamp undefined)
+pDTstampTok = (\(TokStamp a) -> DTstamp a) <$> satisfy (compareT T_TokStamp)
 
 pDTstartTok :: Parser Token Eventprop
-pDTstartTok = (\(TokStart a) -> DTstart a) <$> symbol (TokStart undefined)
+pDTstartTok = (\(TokStart a) -> DTstart a) <$> satisfy (compareT T_TokStart)
 
 pDTendTok :: Parser Token Eventprop
-pDTendTok = (\(TokEnd a) -> DTend a) <$> symbol (TokEnd undefined)
+pDTendTok = (\(TokEnd a) -> DTend a) <$> satisfy (compareT T_TokEnd)
 
 pUIDTok :: Parser Token Eventprop
-pUIDTok = (\(TokUID a) -> UID a) <$> symbol (TokUID "")
+pUIDTok = (\(TokUID a) -> UID a) <$> satisfy (compareT T_TokUID)
 
 pDescTok :: Parser Token Eventprop
-pDescTok = (\(TokDesc a) -> Description a) <$> symbol (TokDesc "")
+pDescTok = (\(TokDesc a) -> Description a) <$> satisfy (compareT T_TokDesc)
 
 pSumTok :: Parser Token Eventprop
-pSumTok = (\(TokSum a) -> Summary a) <$> symbol (TokSum "")
+pSumTok = (\(TokSum a) -> Summary a) <$> satisfy (compareT T_TokSum)
 
 pLocTok :: Parser Token Eventprop
-pLocTok = (\(TokLoc a) -> Location a) <$> symbol (TokLoc "")
-
+pLocTok = (\(TokLoc a) -> Location a) <$> satisfy (compareT T_TokLoc)
 
 
 recognizeCalendar :: String -> Maybe Calendar
