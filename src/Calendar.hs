@@ -67,43 +67,19 @@ data Token
     deriving (Eq, Ord, Show)
 
 data TokenType
-    = T_BegCalendar 
-    | T_EndCalendar 
-    | T_BegEvent 
-    | T_EndEvent 
-    | T_TokStamp
-    | T_TokStart
-    | T_TokEnd
-    | T_TokUID
-    | T_TokDesc
-    | T_TokSum
-    | T_TokLoc
-    | T_TokVer
-    | T_TokPro
-    | T_TokNL
-    | T_TokDT
+    =  T_TokDT
     | T_TokFlt
     | T_TokTxt
     deriving (Eq, Ord, Show)
 
 detectTokenType :: Token -> TokenType
-detectTokenType BegCalendar  = T_BegCalendar
-detectTokenType EndCalendar  = T_EndCalendar
-detectTokenType BegEvent  = T_BegEvent
-detectTokenType EndEvent  = T_EndEvent
-detectTokenType TokStamp = T_TokStamp
-detectTokenType TokStart = T_TokStart
-detectTokenType TokEnd = T_TokEnd
-detectTokenType TokUID = T_TokUID
-detectTokenType TokDesc = T_TokDesc
-detectTokenType TokSum = T_TokSum
-detectTokenType TokLoc = T_TokLoc
-detectTokenType TokVer = T_TokVer
-detectTokenType TokPro = T_TokPro
-detectTokenType TokNL = T_TokNL
 detectTokenType (TokDT _) = T_TokDT
 detectTokenType (TokFlt _) = T_TokFlt
 detectTokenType (TokTxt _) = T_TokTxt
+
+compareT :: TokenType -> Token -> Bool
+compareT tt t = tt == (detectTokenType t)
+
 
 -- ik denk eerst kijken of het een calender of n event is ofzo?
 lexCalendar :: Parser Char [Token]
@@ -207,8 +183,6 @@ pPropCal = pVersionTok <|> pProdidTok <|> (symbol TokNL >> pPropCal)
         pProdidTok :: Parser Token Calprop 
         pProdidTok = (\a (TokTxt t) -> Prodid t) <$> symbol TokPro <*> satisfy (compareT T_TokTxt)
 
-compareT :: TokenType -> Token -> Bool
-compareT tt t = tt == (detectTokenType t)
 
 pEventToken :: Parser Token Event
 pEventToken = (\_ props _ _-> Event props) <$> symbol BegEvent <*> greedy pEventPropTok <*> symbol EndEvent <*> symbol TokNL
