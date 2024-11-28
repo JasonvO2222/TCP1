@@ -29,10 +29,10 @@ instance Show Result where
 main :: IO ()
 main = do
   setNewlineTranslations
-  --mainDateTime
+  mainDateTime
   --testCalendar
   --testTokenCalendar
-  testFeatures
+  --testFeature
 
 mainDateTime :: IO ()
 mainDateTime = interact (printOutput . processCheck . processInput)
@@ -76,8 +76,8 @@ testTokenCalendar = do
                     Just ts -> ts
                     Nothing -> []
 
-testFeatures :: IO ()
-testFeatures = do
+testFeature :: IO ()
+testFeature = do
         withFile "examples/multiline.ics" ReadMode $ \handle -> do
           read <- hGetContents handle
           putStr (show (timeSpent "This is a very long description th at spans over multiple lines." (getres (run pCal read))))
