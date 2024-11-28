@@ -211,10 +211,7 @@ compareT :: TokenType -> Token -> Bool
 compareT tt t = tt == (detectTokenType t)
 
 pEventToken :: Parser Token Event
-pEventToken = (\_ props _ -> Event props) 
-    <$> symbol BegEvent 
-    <*> greedy pEventPropTok
-    <*> symbol EndEvent
+pEventToken = (\_ props _ _-> Event props) <$> symbol BegEvent <*> greedy pEventPropTok <*> symbol EndEvent <*> symbol TokNL
 
 pEventPropTok :: Parser Token Eventprop
 pEventPropTok = pDTstampTok <|> pDTstartTok <|> pDTendTok <|> pUIDTok <|> pDescTok <|> pSumTok <|> pLocTok <|> (satisfy (compareT T_TokNL) >> pEventPropTok)
