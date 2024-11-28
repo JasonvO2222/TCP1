@@ -29,10 +29,10 @@ instance Show Result where
 main :: IO ()
 main = do
   setNewlineTranslations
-  mainDateTime
+  --mainDateTime
   --testCalendar
-  --testTokenCalendar
-  --testFeature
+  testTokenCalendar
+  testFeature
 
 mainDateTime :: IO ()
 mainDateTime = interact (printOutput . processCheck . processInput)
