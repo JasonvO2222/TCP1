@@ -32,7 +32,7 @@ main = do
   --mainDateTime
   --testCalendar
   testTokenCalendar
-  testFeature
+  --testFeature
 
 mainDateTime :: IO ()
 mainDateTime = interact (printOutput . processCheck . processInput)

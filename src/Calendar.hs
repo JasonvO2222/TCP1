@@ -172,7 +172,7 @@ pProdid :: Parser Char Calprop
 pProdid = (\a b c -> Prodid b) <$> token "PRODID:" <*> greedy takeSymbol <*> symbol '\n'
 
 takeSymbol :: Parser Char Char
-takeSymbol = (token "\n " >> takeSymbol) <<|> satisfy (/= '\n') -- "\n " moet er uit gehaald worden en niet vervangen worden met ' ' (dat is hoe het nu werkt) 
+takeSymbol = (token "\n " >> takeSymbol) <<|> satisfy (/= '\n') 
 
 -- parse event
 pEvent :: Parser Char Event
@@ -196,10 +196,10 @@ pLocation =  (\a b c -> Location b) <$> token "LOCATION:" <*> greedy takeSymbol 
 
 -- parse using token
 parseCalendar :: Parser Token Calendar
-parseCalendar = (\a na b c d nb -> Calendar b c) <$> symbol BegCalendar <*> symbol TokNL <*> greedy pPropCal <*> greedy pEventToken <*> symbol EndCalendar <*> symbol TokNL
+parseCalendar = (\a b c d -> Calendar b c) <$> symbol BegCalendar <*> greedy pPropCal <*> greedy pEventToken <*> symbol EndCalendar
 
 pPropCal :: Parser Token Calprop
-pPropCal = const <$> (pVersionTok <|> pProdidTok) <*> symbol TokNL
+pPropCal = pVersionTok <|> pProdidTok <|> (satisfy (compareT T_TokNL) >> pPropCal)
     where
         pVersionTok :: Parser Token Calprop
         pVersionTok =  (\a (TokFlt f) -> Version f) <$> satisfy (compareT T_TokVer) <*> satisfy (compareT T_TokFlt)
@@ -217,7 +217,7 @@ pEventToken = (\_ props _ -> Event props)
     <*> symbol EndEvent
 
 pEventPropTok :: Parser Token Eventprop
-pEventPropTok = const <$> (pDTstampTok <|> pDTstartTok <|> pDTendTok <|> pUIDTok <|> pDescTok <|> pSumTok <|> pLocTok) <*> pTokNL
+pEventPropTok = pDTstampTok <|> pDTstartTok <|> pDTendTok <|> pUIDTok <|> pDescTok <|> pSumTok <|> pLocTok <|> (satisfy (compareT T_TokNL) >> pEventPropTok)
 
 pDTstampTok :: Parser Token Eventprop
 pDTstampTok = (\a (TokDT dt) -> DTstamp dt) <$> satisfy (compareT T_TokStamp) <*> satisfy (compareT T_TokDT)
@@ -239,9 +239,6 @@ pSumTok = (\a (TokTxt s) -> Summary s) <$> satisfy (compareT T_TokSum) <*> satis
 
 pLocTok :: Parser Token Eventprop
 pLocTok = (\a (TokTxt s) -> Location s) <$> satisfy (compareT T_TokLoc) <*> satisfy (compareT T_TokTxt)
-
-pTokNL :: Parser Token Eventprop
-pTokNL = (\nl -> Location "") <$> satisfy (compareT T_TokNL)
 
 
 recognizeCalendar :: String -> Maybe Calendar
