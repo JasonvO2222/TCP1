@@ -26,6 +26,25 @@ data Eventprop
     | Location String
     deriving (Eq, Ord, Show)
 
+data EventPropType
+    = T_DTstamp  
+    | T_DTstart 
+    | T_DTend 
+    | T_UID 
+    | T_Description 
+    | T_Summary 
+    | T_Location 
+    deriving (Eq, Ord, Show)
+
+detectPropType :: Eventprop -> EventPropType
+detectPropType (DTstamp _) = T_DTstamp
+detectPropType (DTstart _) = T_DTstart
+detectPropType (DTend _) = T_DTend
+detectPropType (UID _) = T_UID
+detectPropType (Description _) = T_Description
+detectPropType (Summary _) = T_Summary
+detectPropType (Location _) = T_Location
+
 -- Exercise 7
 data Token 
     = BegCalendar 

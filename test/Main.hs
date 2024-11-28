@@ -31,7 +31,8 @@ main = do
   setNewlineTranslations
   --mainDateTime
   --testCalendar
-  testTokenCalendar
+  --testTokenCalendar
+  testFeatures
 
 mainDateTime :: IO ()
 mainDateTime = interact (printOutput . processCheck . processInput)
@@ -74,6 +75,20 @@ testTokenCalendar = do
               getinter ts = case ts of 
                     Just ts -> ts
                     Nothing -> []
+
+testFeatures :: IO ()
+testFeatures = do
+        withFile "examples/multiline.ics" ReadMode $ \handle -> do
+          read <- hGetContents handle
+          putStr (show (timeSpent "This is a very long description th at spans over multiple lines." (getres (run pCal read))))
+        
+        return ()
+
+        where getres c = case c of
+                    Just c -> c
+                    Nothing -> Calendar [] []
+
+
 
 mainCalendar :: IO ()
 mainCalendar = interact (show . recognizeCalendar)

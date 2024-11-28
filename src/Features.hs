@@ -14,10 +14,14 @@ findEvents :: DateTime -> Calendar -> [Event]
 findEvents dt c = [x | x <- (events c), getStartTime x <= dt && getEndTime x > dt]
 
 getStartTime :: Event -> DateTime
-getStartTime e = let (DTstart dt : _) = eventprops e in dt
+getStartTime (Event es) = (\(DTstart dt) -> dt) (getDT es T_DTstart)
 
 getEndTime :: Event -> DateTime
-getEndTime e = let (DTend dt : _) = eventprops e in dt
+getEndTime (Event es) = (\(DTend dt) -> dt) (getDT es T_DTend)
+
+getDT :: [Eventprop] -> EventPropType -> Eventprop
+getDT (p:ps) t | (detectPropType p) == t = p
+               | otherwise = getDT ps t 
 
 -- Check if any events overlap
 checkOverlapping :: Calendar -> Bool
@@ -35,10 +39,41 @@ isOverlap e1 e2 = (e1start < e2end && e1end > e2start)
         e2start = getStartTime e2
         e2end   = getEndTime e2
 
--- huh?
+-- Calculate time spent on all events with a given summary
 timeSpent :: String -> Calendar -> Int
-timeSpent = undefined
+timeSpent s (Calendar cps eps) = sum (map getDuration (iterateEvents eps s))
 
--- voor elke event met een bepaalde summary, tel minuten op
+getDuration :: Event -> Int
+getDuration e = dateDiff startD endD + timeDiff startT endT
+      where (DateTime startD startT sb) = getStartTime e
+            (DateTime endD endT se) = getEndTime e
+
+timeDiff :: Time -> Time -> Int
+timeDiff s@(Time ah am as) e@(Time bh bm bs) = (runHour bh * 3600 + runMinute bm * 60 + runSecond bs) - (runHour ah * 3600 + runMinute am * 60 + runSecond as)
+
+dateDiff :: Date -> Date -> Int
+dateDiff s e = (traverseDays 0 s e) * 86400
+
+traverseDays :: Int -> Date -> Date -> Int
+traverseDays acc s e | s == e = acc
+                     | otherwise = traverseDays (acc + 1) (nextDay s) e
+
+nextDay :: Date -> Date
+nextDay (Date y m d) | (runDay d) < daysInMonth = Date y m (Day (runDay d + 1))
+                     | (runMonth m) < 12 = Date y (Month (runMonth m + 1)) (Day 0)
+                     | otherwise = Date (Year (runYear y + 1)) (Month 0) (Day 0)
+               where leap = runYear y `mod` 4 == 0
+                     daysInMonth = let im = runMonth m in helpDay leap im (even im)
+
+iterateEvents :: [Event] -> String -> [Event]
+iterateEvents es s = filter (compareSummary s) es
+
+compareSummary :: String -> Event -> Bool
+compareSummary s (Event props) = (getSummary props) == s
+
+getSummary :: [Eventprop] -> String
+getSummary [] = ""
+getSummary (p:ps) | (detectPropType p) == T_Summary = (\(Summary s) -> s) p
+               | otherwise = getSummary ps
 
 
