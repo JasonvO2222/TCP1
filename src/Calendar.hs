@@ -150,7 +150,7 @@ pProdid :: Parser Char Calprop
 pProdid = (\a b c -> Prodid b) <$> token "PRODID:" <*> greedy takeSymbol <*> symbol '\n'
 
 takeSymbol :: Parser Char Char
-takeSymbol = (const ' ') <$> token "\n " <<|> satisfy (/= '\n')
+takeSymbol = (token "\n " >> takeSymbol) <<|> satisfy (/= '\n')
 
 -- parse event
 pEvent :: Parser Char Event
