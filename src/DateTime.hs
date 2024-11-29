@@ -127,14 +127,14 @@ parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
-checkDateTime (DateTime d t u) = True
+checkDateTime (DateTime d t u) = checkDate d && checkTime t
 
 --check Date section
 checkDate :: Date -> Bool
 checkDate (Date y m d) = checkYear y && checkMonth m && checkDay y m d
 
 checkYear :: Year -> Bool
-checkYear y = let i = runYear y in (i >= 1000)
+checkYear y = let i = runYear y in (i >= 0)
 
 checkMonth :: Month -> Bool
 checkMonth m = let i = runMonth m in (i >= 1 && i <= 12)
@@ -146,7 +146,7 @@ checkDay y m d = id >= 1 && id <= (helpDay leap im e)
           e = even im
           id = runDay d
 
-helpDay :: Bool -> Int -> Bool -> Int
+helpDay :: Bool -> Int -> Bool -> Int --returns days per month based on input: Bool (is it a leap year) -> Int (month number) -> Bool (is it an even month)
 helpDay True 2 _  = 29
 helpDay _ 2 _     = 28
 helpDay _ _ True  = 30

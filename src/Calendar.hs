@@ -27,7 +27,12 @@ data Eventprop
     | Location String
     deriving (Eq, Ord, Show)
 
-
+-- The data type Eventprop contains objects which also expect a value (string or datetime), 
+-- we need a type only version so that we can compare whether two Eventprops are of the same type.
+-- This is because when we use just DTstamp for example, it works lika a constructor and expects a DateTime, which doesnt allow us to compare.
+-- We made a function detectPropType to convert these Eventprops to their type so we can identify them
+-- Pattern matching obviously doesnt have this issue, it is just that in some contexts we couldnt use pattern matching
+-- We used the same method for the Tokens further down
 data EventPropType
     = T_DTstamp  
     | T_DTstart 

@@ -5,7 +5,7 @@
 -- Feel free to use ghci instead, or to change functions here to test whatever you want.
 -- We'll ignore anything in this file when grading!
 
--- Made by: Gijs Koppenberg (0779342) and Jason van Otterlo
+-- Made by: Gijs Koppenberg (0779342) and Jason van Otterlo (9425268)
 
 
 module Main where
