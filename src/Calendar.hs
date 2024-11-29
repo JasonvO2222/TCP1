@@ -16,6 +16,7 @@ data Calprop = Prodid String
 newtype Event = Event { eventprops :: [Eventprop] }
     deriving (Eq, Ord, Show)
 
+-- different types of properties an event can have
 data Eventprop
     = DTstamp DateTime 
     | DTstart DateTime
@@ -25,6 +26,7 @@ data Eventprop
     | Summary String
     | Location String
     deriving (Eq, Ord, Show)
+
 
 data EventPropType
     = T_DTstamp  
@@ -93,10 +95,11 @@ detectTokenType (TokLoc _) = T_TokLoc
 detectTokenType (TokVer _) = T_TokVer
 detectTokenType (TokPro _) = T_TokPro
 
--- ik denk eerst kijken of het een calender of n event is ofzo?
+-- Turning a a textual calendar to a list of tokens
 lexCalendar :: Parser Char [Token]
 lexCalendar = many (lexComp <|> lexProp)
 
+-- Turning components into tokens, like begin calendar and begin vevent
 lexComp :: Parser Char Token
 lexComp = 
     (token "BEGIN:VCALENDAR" >> return BegCalendar)
@@ -107,6 +110,8 @@ lexComp =
     <|>
     (token "\nEND:VEVENT" >> return EndEvent)
 
+
+-- lexing event properties
 lexProp :: Parser Char Token
 lexProp =
     (token "\nDTSTAMP:" >>  (TokStamp <$> parseDateTime))
@@ -126,23 +131,30 @@ lexProp =
     (token "\nVERSION:" >> (TokVer <$> pF))
     <|>
     (token "\nPRODID:" >> (TokPro <$> greedy takeSymbol))
+
+-- parsing version string to the corresponding float
+-- example: "2.0" -> 2.0
 pF :: Parser Char Float
 pF = (\a b c -> fromIntegral a + fromIntegral c * 0.1) <$> pDig <*> symbol '.' <*> pDig
 
 
--- parse calender
+-- parse string to calender object
 pCal :: Parser Char Calendar
 pCal = (\a b c d -> Calendar b c) <$> token "BEGIN:VCALENDAR\n" <*>
                                       greedy pCalProp <*> 
                                       greedy pEvent <*> 
                                       token "END:VCALENDAR\n"
 
+
+-- parsing string the calendar property, parses a Version or a Prodid
 pCalProp :: Parser Char Calprop
 pCalProp = pVersion <|> pProdid
 
+-- Parsing entire 'version' string literal
 pVersion :: Parser Char Calprop
 pVersion = (\a b c -> b) <$> token "VERSION:" <*> pFloat <*> symbol '\n'
 
+-- pVersion helper function to correctly parse the float in the version
 pFloat :: Parser Char Calprop
 pFloat = (\a b c -> Version (fromIntegral a + fromIntegral c * 0.1)) <$> pDig <*> symbol '.' <*> pDig
 
@@ -152,12 +164,13 @@ pProdid = (\a b c -> Prodid b) <$> token "PRODID:" <*> greedy takeSymbol <*> sym
 takeSymbol :: Parser Char Char
 takeSymbol = (token "\n " >> takeSymbol) <<|> satisfy (/= '\n')
 
--- parse event
+-- parse a single event from string, starts with a begin event, then greedily takes as many event properties as possible, then end event
 pEvent :: Parser Char Event
 pEvent = (\a b c -> Event b) <$> token "BEGIN:VEVENT\n" <*>
                                  greedy pEventProp <*> 
                                  token "END:VEVENT\n"
 
+-- parsing event property
 pEventProp :: Parser Char Eventprop
 pEventProp = pDTstamp <|> pDTstart <|> pDTend <|> 
              pUID <|> pDescription <|> pSummary <|> pLocation
@@ -172,10 +185,12 @@ pSummary =  (\a b c -> Summary b) <$> token "SUMMARY:" <*> greedy takeSymbol <*>
 pLocation =  (\a b c -> Location b) <$> token "LOCATION:" <*> greedy takeSymbol <*> symbol '\n'
 
 
--- parse using token
+-- parsing using tokens, creates a calendar object from tokens
 parseCalendar :: Parser Token Calendar
 parseCalendar = (\a b c d -> Calendar b c) <$> symbol BegCalendar <*> greedy pPropCal <*> greedy pEventToken <*> symbol EndCalendar
 
+
+-- creating calendar properties, ie either the version or the prodid, from tokens
 pPropCal :: Parser Token Calprop
 pPropCal = pVersionTok <|> pProdidTok
     where
@@ -185,15 +200,18 @@ pPropCal = pVersionTok <|> pProdidTok
         pProdidTok :: Parser Token Calprop 
         pProdidTok = (\(TokPro s) -> Prodid s) <$> satisfy (compareT T_TokPro)
 
+-- comparing tokentypes to correctly parse
 compareT :: TokenType -> Token -> Bool
 compareT tt t = tt == (detectTokenType t)
 
+-- parsing event from tokens
 pEventToken :: Parser Token Event
 pEventToken = (\_ props _ -> Event props) 
     <$> symbol BegEvent 
     <*> greedy pEventPropTok
     <*> symbol EndEvent
 
+-- parsing an event property from a token, uses helper functions for individual properties
 pEventPropTok :: Parser Token Eventprop
 pEventPropTok = pDTstampTok <|> pDTstartTok <|> pDTendTok <|> pUIDTok <|> pDescTok <|> pSumTok <|> pLocTok
 
@@ -223,6 +241,7 @@ recognizeCalendar :: String -> Maybe Calendar
 recognizeCalendar s = run lexCalendar s >>= run parseCalendar
 
 -- Exercise 8
+-- printing calendar object to a string 
 printCalendar :: Calendar -> String
 printCalendar (Calendar c e) = "BEGIN:VCALENDAR\n" ++ 
                                foldl (\a p -> a ++ printCalProp p) "" c ++ 

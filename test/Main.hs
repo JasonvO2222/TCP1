@@ -76,17 +76,47 @@ testTokenCalendar = do
                     Just ts -> ts
                     Nothing -> []
 
+
 testFeature :: IO ()
 testFeature = do
         withFile "examples/multiline.ics" ReadMode $ \handle -> do
           read <- hGetContents handle
           putStr (show (timeSpent "This is a very long description th at spans over multiple lines." (getres (run pCal read))))
+
         
         return ()
 
         where getres c = case c of
                     Just c -> c
                     Nothing -> Calendar [] []
+
+
+
+-- EXTRA TEST TO TEST FEATURES
+{-
+testFeature :: IO ()
+testFeature = do
+    withFile "examples/rooster_infotc.ics" ReadMode $ \handle -> do
+        read <- hGetContents handle
+        
+        let calendar = getres (run pCal read)
+        
+        putStrLn $ "Total number of events: " ++ show (countEvents calendar)
+        
+        let hasOverlaps = checkOverlapping calendar
+        putStrLn $ "Calendar has overlapping events: " ++ show hasOverlaps
+        
+        let testSummary = "PRACT INFOB3TC group: 1"
+        let totalTimeSpent = timeSpent testSummary calendar
+        putStrLn $ "Total time spent on events with summary '" ++ testSummary ++ "': " ++ show totalTimeSpent ++ " seconds"
+        
+    return ()
+  where
+    getres c = case c of
+        Just cal -> cal
+        Nothing  -> Calendar [] []
+-}
+
 
 
 
